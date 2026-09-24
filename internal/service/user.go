@@ -18,7 +18,7 @@ func (s *UserService) Register(username, password, nickname, contact string) (*m
 	if !usernameRe.MatchString(username) || len(password) < 8 || len(password) > 64 {
 		return nil, errcode.ParamError
 	}
-	if nickname == "" || contact == "" || len(nickname) > 32 {
+	if nickname == "" || contact == "" || len(nickname) > 32 || len(contact) > 64 {
 		return nil, errcode.ParamError
 	}
 	exists, err := repository.FindUserByUsername(username)
@@ -56,4 +56,23 @@ func (s *UserService) Login(username, password string) (string, *model.User, *er
 		return "", nil, errcode.InternalError
 	}
 	return token, u, nil
+}
+
+func (s *UserService) UpdateProfile(userID uint64, nickname, contact string) (*model.User, *errcode.Error) {
+	u, err := repository.FindUserByID(userID)
+	if err != nil {
+		return nil, errcode.InternalError
+	}
+	if u == nil {
+		return nil, errcode.NotFound
+	}
+	if nickname == "" || contact == "" || len(nickname) > 32 || len(contact) > 64 {
+		return nil, errcode.ParamError
+	}
+	u.Nickname, u.Contact = nickname, contact
+	err = repository.UpdateUser(u)
+	if err != nil {
+		return nil, errcode.InternalError
+	}
+	return u, nil
 }
