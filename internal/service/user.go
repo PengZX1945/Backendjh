@@ -105,3 +105,14 @@ func (s *UserService) ChangePassword(userID uint64, oldPassword, newPassword str
 	}
 	return nil
 }
+
+func (s *UserService) GetProfile(userID uint64) (*model.User, *errcode.Error) {
+	u, err := repository.FindUserByID(userID)
+	if err != nil {
+		return nil, errcode.InternalError
+	}
+	if u == nil {
+		return nil, errcode.NotFound
+	}
+	return u, nil
+}
