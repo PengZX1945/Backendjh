@@ -11,7 +11,7 @@ func ErrorHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				response.Error(c, errcode.InternalError)
+				response.Fail(c, errcode.InternalError)
 				c.Abort()
 			}
 		}()
