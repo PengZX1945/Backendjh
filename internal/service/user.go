@@ -76,3 +76,32 @@ func (s *UserService) UpdateProfile(userID uint64, nickname, contact string) (*m
 	}
 	return u, nil
 }
+
+func (s *UserService) ChangePassword(userID uint64, oldPassword, newPassword string) *errcode.Error {
+	if len(newPassword) < 8 || len(newPassword) > 64 {
+		return errcode.ParamError
+	}
+	u, err := repository.FindUserByID(userID)
+	if err != nil {
+		return errcode.InternalError
+	}
+	if u == nil {
+		return errcode.NotFound
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(oldPassword))
+	if err != nil {
+		return errcode.WrongPassword
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+
+	if err != nil {
+		return errcode.InternalError
+	}
+	u.PasswordHash = string(hash)
+	err = repository.UpdateUser(u)
+	if err != nil {
+		return errcode.InternalError
+	}
+	return nil
+}
