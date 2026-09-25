@@ -12,10 +12,10 @@ import (
 
 var usernameRe = regexp.MustCompile(`^[a-zA-Z0-9_]{4,32}$`)
 
-type UserService struct{ JWTSecret string }
+type UserService struct{ jwtSecret string }
 
 func NewUserService(jwtSecret string) *UserService {
-	return &UserService{JWTSecret: jwtSecret}
+	return &UserService{jwtSecret: jwtSecret}
 }
 
 func (s *UserService) Register(username, password, nickname, contact string) (*model.User, *errcode.Error) {
@@ -55,7 +55,7 @@ func (s *UserService) Login(username, password string) (string, *model.User, *er
 	if u.Status != 1 {
 		return "", nil, errcode.AccountDisabled
 	}
-	token, err := jwt.Generate(s.JWTSecret, u.ID, u.Role)
+	token, err := jwt.Generate(s.jwtSecret, u.ID, u.Role)
 	if err != nil {
 		return "", nil, errcode.InternalError
 	}
