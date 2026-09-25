@@ -14,6 +14,10 @@ var usernameRe = regexp.MustCompile(`^[a-zA-Z0-9_]{4,32}$`)
 
 type UserService struct{ JWTSecret string }
 
+func NewUserService(jwtSecret string) *UserService {
+	return &UserService{JWTSecret: jwtSecret}
+}
+
 func (s *UserService) Register(username, password, nickname, contact string) (*model.User, *errcode.Error) {
 	if !usernameRe.MatchString(username) || len(password) < 8 || len(password) > 64 {
 		return nil, errcode.ParamError
