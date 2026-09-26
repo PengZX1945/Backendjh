@@ -3,6 +3,9 @@ package main
 import (
 	"log"
 
+	"Backendjh/internal/handler"
+	"Backendjh/internal/router"
+	"Backendjh/internal/service"
 	"Backendjh/internal/config"
 	"Backendjh/internal/middleware"
 	"Backendjh/internal/model"
@@ -15,12 +18,14 @@ func main() {
 	if err := model.InitDB(cfg.DSN); err != nil {
 		log.Fatalf("init db failed: %v", err)
 	}
+
+	us := service.NewUserService(cfg.JWTSecret)
+	uh := handler.NewUserHandler(us)
+
 	r := gin.Default()
 	r.Use(middleware.ErrorHandler())
-	//健康检查接口
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{"msg": "pong"})
-	})
+
+	router.Setup(r, uh, cfg.JWTSecret)
 
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("server exited: %v", err)
