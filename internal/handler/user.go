@@ -55,3 +55,19 @@ func (h *UserHandler) Register(c *gin.Context) {
 	}
 	response.OK(c, nil)
 }
+
+func (h *UserHandler) GetProfile(c *gin.Context) {
+	userID := c.GetUint64("userID")
+	u, e := h.userService.GetProfile(userID)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	response.OK(c, gin.H{
+		"id":       u.ID,
+		"username": u.Username,
+		"nickname": u.Nickname,
+		"role":     u.Role,
+		"contact":  u.Contact,
+	})
+}
