@@ -91,3 +91,7 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 	}
 	response.OK(c, nil)
 }
+
+func (h *UserHandler) Logout(c *gin.Context) {
+	response.OK(c, nil)
+}
