@@ -71,3 +71,23 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 		"contact":  u.Contact,
 	})
 }
+
+type changePasswordRequest struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required"`
+}
+
+func (h *UserHandler) ChangePassword(c *gin.Context) {
+	var req changePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	userID := c.GetUint64("userID")
+	err := h.userService.ChangePassword(userID, req.OldPassword, req.NewPassword)
+	if err != nil {
+		response.Fail(c, err)
+		return
+	}
+	response.OK(c, nil)
+}
