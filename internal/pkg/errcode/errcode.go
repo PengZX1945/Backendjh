@@ -24,4 +24,5 @@ var (
 	DuplicateSubmit  = New(10009, "请勿重复提交")
 	AccountDisabled  = New(10010, "账号已被禁用")
 	InternalError    = New(20001, "服务器内部错误")
+	SamePassword     = New(10011, "新密码不能与旧密码相同")
 )

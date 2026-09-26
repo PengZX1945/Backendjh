@@ -17,6 +17,8 @@ func Fail(c *gin.Context, err *errcode.Error) {
 
 func httpStatusOf(err *errcode.Error) int {
 	switch err {
+	case errcode.SamePassword:
+		return http.StatusBadRequest
 	case errcode.ParamError:
 		return http.StatusBadRequest // 400
 	case errcode.Unauthorized:

@@ -85,6 +85,9 @@ func (s *UserService) ChangePassword(userID uint64, oldPassword, newPassword str
 	if len(newPassword) < 8 || len(newPassword) > 64 {
 		return errcode.ParamError
 	}
+	if oldPassword == newPassword {
+		return errcode.SamePassword
+	}
 	u, err := repository.FindUserByID(userID)
 	if err != nil {
 		return errcode.InternalError
