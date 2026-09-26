@@ -34,3 +34,24 @@ func (h *UserHandler) Login(c *gin.Context) {
 	}
 	response.OK(c, gin.H{"token": token})
 }
+
+type registerRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	Nickname string `json:"nickname" binding:"required"`
+	Contact  string `json:"contact" binding:"required"`
+}
+
+func (h *UserHandler) Register(c *gin.Context) {
+	var req registerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	_, err := h.userService.Register(req.Username, req.Password, req.Nickname, req.Contact)
+	if err != nil {
+		response.Fail(c, err)
+		return
+	}
+	response.OK(c, nil)
+}
