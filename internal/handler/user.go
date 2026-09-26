@@ -95,3 +95,23 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 func (h *UserHandler) Logout(c *gin.Context) {
 	response.OK(c, nil)
 }
+
+type updateProfileRequest struct {
+	Nickname string `json:"nickname" binding:"required"`
+	Contact  string `json:"contact" binding:"required"`
+}
+
+func (h *UserHandler) UpdateProfile(c *gin.Context) {
+	var req updateProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	userID := c.GetUint64("userID")
+	_, err := h.userService.UpdateProfile(userID, req.Nickname, req.Contact)
+	if err != nil {
+		response.Fail(c, err)
+		return
+	}
+	response.OK(c, nil)
+}
