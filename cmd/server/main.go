@@ -3,12 +3,12 @@ package main
 import (
 	"log"
 
-	"Backendjh/internal/handler"
-	"Backendjh/internal/router"
-	"Backendjh/internal/service"
 	"Backendjh/internal/config"
+	"Backendjh/internal/handler"
 	"Backendjh/internal/middleware"
 	"Backendjh/internal/model"
+	"Backendjh/internal/router"
+	"Backendjh/internal/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,6 +24,7 @@ func main() {
 
 	r := gin.Default()
 	r.Use(middleware.ErrorHandler())
+	r.Use(middleware.CORS())
 
 	router.Setup(r, uh, cfg.JWTSecret)
 
