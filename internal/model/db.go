@@ -13,5 +13,5 @@ func InitDB(dsn string) error {
 		return err
 	}
 	DB = db
-	return db.AutoMigrate(&User{})
+	return db.AutoMigrate(&User{}, &Item{})
 }
