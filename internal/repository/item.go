@@ -43,8 +43,14 @@ type ItemListFilter struct {
 func ListItems(f ItemListFilter) ([]model.Item, error) {
 	var items []model.Item
 
-	q := model.DB.Where("type = ? AND status = ?", f.Type, *f.Status)
+	q := model.DB.Model(&model.Item{})
 
+	if f.Type != "" {                        // ② type 有值才加
+		q = q.Where("type = ?", f.Type)
+	}
+	if f.Status != nil {                     // ③ status 传了才加
+		q = q.Where("status = ?", *f.Status)
+	}
 	if f.PosterID != nil {
 		q = q.Where("poster_id = ?", *f.PosterID)
 	}

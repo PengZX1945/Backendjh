@@ -54,3 +54,18 @@ func (s *ItemService) Publish(userID uint64, typ string, p PublishParams) *errco
 	}
 	return nil
 }
+
+func (s *ItemService) MyItem(userID uint64, typ string, itemStatus *int8, page int, pageSize int) ([]model.Item, *errcode.Error) {
+	if typ != "" && typ != model.ItemTypeLost && typ != model.ItemTypeFound {
+		return nil, errcode.ParamError
+	}
+	if itemStatus != nil && (*itemStatus < 0 || *itemStatus > model.ItemStatusClaimed) {
+		return nil, errcode.ParamError
+	}
+	itemFilter := repository.ItemListFilter{Type: typ, PosterID: &userID, Status: itemStatus, Page: page, PageSize: pageSize}
+	itemList, err := repository.ListItems(itemFilter)
+	if err != nil {
+		return nil, errcode.InternalError
+	}
+	return itemList, nil
+}
