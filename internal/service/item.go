@@ -69,3 +69,24 @@ func (s *ItemService) MyItem(userID uint64, typ string, itemStatus *int8, page i
 	}
 	return itemList, nil
 }
+
+func (s *ItemService) Delete(userID uint64, role string, itemID uint64) *errcode.Error {
+	if itemID == 0 {
+		return errcode.ParamError
+	}
+	item, err := repository.FindItemByID(itemID)
+	if err != nil {
+		return errcode.InternalError
+	}
+	if item == nil {
+		return errcode.NotFound   // 10004 资源不存在
+	}
+	if item.PosterID != userID && role != model.RoleSysAdmin && role != model.RoleFinderAdmin {
+		return errcode.Forbidden
+	}
+	err = repository.DeleteItem(itemID)
+	if err != nil {
+		return errcode.InternalError
+	}
+	return nil
+}
