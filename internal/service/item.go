@@ -152,3 +152,57 @@ func (s *ItemService) Close(userID uint64, itemID uint64, role string) *errcode.
 	}
 	return nil
 }
+
+type UpdateParams struct {
+	Typ         string
+	ItemName    string
+	Category    string
+	Location    string
+	HappenTime  string
+	Description string
+	Images      []string
+	GetContact  string
+	GetLocation string
+}
+
+func (s *ItemService) Update(userID uint64, itemID uint64, p UpdateParams) *errcode.Error {
+	item, err := repository.FindItemByID(itemID)
+	if err != nil {
+		return errcode.InternalError
+	}
+	if item == nil {
+		return errcode.NotFound
+	}
+	if item.PosterID != userID {
+		return errcode.Forbidden
+	}
+	if item.Status != model.ItemStatusPending && item.Status != model.ItemStatusRejected && item.Status != model.ItemStatusPublished {
+		return errcode.StatusNotAllowed
+	}
+	if p.Typ != model.ItemTypeLost && p.Typ != model.ItemTypeFound {
+		return errcode.ParamError
+	}
+	if p.ItemName == "" || p.Category == "" {
+		return errcode.ParamError
+	}
+	if p.Typ == model.ItemTypeFound && p.GetContact == "" && p.GetLocation == "" {
+		return errcode.ParamError
+	}
+	if len(p.Images) > 5 {
+		return errcode.ParamError
+	}
+	item.ItemName = p.ItemName
+	item.Type = p.Typ
+	item.Category = p.Category
+	item.Location = p.Location
+	item.HappenTime = p.HappenTime
+	item.Description = p.Description
+	item.Status = model.ItemStatusPending
+	item.GetContact = p.GetContact
+	item.GetLocation = p.GetLocation
+	item.SetImages(p.Images)
+	if err := repository.UpdateItem(item); err != nil {
+		return errcode.InternalError
+	}
+	return nil
+}
