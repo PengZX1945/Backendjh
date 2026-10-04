@@ -12,13 +12,13 @@ import (
 func Auth(secret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")
-		tokenStr, ok := strings.CutPrefix(header, "Bearer ")
-		if !ok || tokenStr == "" {
+		token, ok := strings.CutPrefix(header, "Bearer ")
+		if !ok || token == "" {
 			response.Fail(c, errcode.Unauthorized)
 			c.Abort()
 			return
 		}
-		claims, err := jwt.Parse(secret, tokenStr)
+		claims, err := jwt.Parse(secret, token)
 		if err != nil {
 			response.Fail(c, errcode.Unauthorized)
 			c.Abort()
@@ -26,6 +26,20 @@ func Auth(secret string) gin.HandlerFunc {
 		}
 		c.Set("userID", claims.UserID)
 		c.Set("role", claims.Role)
+		c.Next()
+	}
+}
+
+func OptionalAuth(secret string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		header := c.GetHeader("Authorization")
+		token, ok := strings.CutPrefix(header, "Bearer ")
+		if ok && token != "" {
+			if claims, err := jwt.Parse(secret, token); err == nil {
+				c.Set("userID", claims.UserID)
+				c.Set("role", claims.Role)
+			}
+		}
 		c.Next()
 	}
 }
