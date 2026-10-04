@@ -131,3 +131,24 @@ func (s *ItemService) Detail(userID uint64, role string, itemID uint64) (*model.
 	}
 	return nil, errcode.NotFound
 }
+
+func (s *ItemService) Close(userID uint64, itemID uint64, role string) *errcode.Error {
+	item, err := repository.FindItemByID(itemID)
+	if err != nil {
+		return errcode.InternalError
+	}
+	if item == nil {
+		return errcode.NotFound
+	}
+	if item.Status != model.ItemStatusPublished {
+		return errcode.StatusNotAllowed
+	}
+	if item.PosterID != userID && role != model.RoleFinderAdmin && role != model.RoleSysAdmin {
+		return errcode.Forbidden
+	}
+	item.Status = model.ItemStatusClaimed
+	if err := repository.UpdateItem(item); err != nil {
+		return errcode.InternalError
+	}
+	return nil
+}
