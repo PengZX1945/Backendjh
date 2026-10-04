@@ -114,3 +114,20 @@ func (s *ItemService) ListItems(l ListParams) ([]model.Item, *errcode.Error) {
 	}
 	return itemList, nil
 }
+
+func (s *ItemService) Detail(userID uint64, role string, itemID uint64) (*model.Item, *errcode.Error) {
+	item, err := repository.FindItemByID(itemID)
+	if err != nil {
+		return nil, errcode.InternalError
+	}
+	if item == nil {
+		return nil, errcode.NotFound
+	}
+	if item.Status == model.ItemStatusPublished || item.Status == model.ItemStatusClaimed {
+		return item, nil
+	}
+	if userID != 0 && item.PosterID == userID || role == model.RoleSysAdmin || role == model.RoleFinderAdmin {
+		return item, nil
+	}
+	return nil, errcode.NotFound
+}
