@@ -24,10 +24,10 @@ type Item struct {
 }
 
 const (
-	ItemStatusPending   = 0 // 待审核
-	ItemStatusPublished = 1 // 已发布
-	ItemStatusRejected  = 2 // 已驳回
-	ItemStatusClaimed   = 3 // 已认领
+	ItemStatusPending   int8 = 0 // 待审核
+	ItemStatusPublished int8 = 1 // 已发布
+	ItemStatusRejected  int8 = 2 // 已驳回
+	ItemStatusClaimed   int8 = 3 // 已认领
 )
 
 const (
