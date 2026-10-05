@@ -55,3 +55,47 @@ func (s *ClaimService) Submit(userID, itemID uint64, reason string) *errcode.Err
 	}
 	return nil
 }
+
+func (s *ClaimService) Review(role string, claimID uint64, option string) *errcode.Error {
+	if role != model.RoleFinderAdmin && role != model.RoleSysAdmin {
+		return errcode.Forbidden
+	}
+	if option != "approve" && option != "reject" {
+		return errcode.ParamError
+	}
+	claim, err := repository.FindClaimByID(claimID)
+	if err != nil {
+		return errcode.InternalError
+	}
+	if claim == nil {
+		return errcode.NotFound
+	}
+	if claim.ClaimStatus != model.ClaimStatusPending {
+		return errcode.StatusNotAllowed
+	}
+	if option == "approve" {
+		claim.ClaimStatus = model.ClaimStatusApproved
+		if err := repository.UpdateClaim(claim); err != nil {
+			return errcode.InternalError
+		}
+		item, err := repository.FindItemByID(claim.ItemID)
+		if err != nil {
+			return errcode.InternalError
+		}
+		if item != nil {
+			item.Status = model.ItemStatusClaimed
+			if err := repository.UpdateItem(item); err != nil {
+				return errcode.InternalError
+			}
+		}
+		if err := repository.RejectOtherPendingClaims(claim.ItemID, claim.ID); err != nil {
+			return errcode.InternalError
+		}
+		return nil
+	}
+	claim.ClaimStatus = model.ClaimStatusRejected
+	if err := repository.UpdateClaim(claim); err != nil {
+		return errcode.InternalError
+	}
+	return nil
+}

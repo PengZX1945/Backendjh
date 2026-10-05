@@ -58,3 +58,10 @@ func ListClaims(f ClaimListFilter) ([]model.Claim, error) {
 		Find(&claims).Error
 	return claims, err
 }
+
+func RejectOtherPendingClaims(itemID, exceptID uint64) error {
+	return model.DB.Model(&model.Claim{}).
+		Where("item_id = ? AND id <> ? AND claim_status = ?",
+			itemID, exceptID, model.ClaimStatusPending).
+		Update("claim_status", model.ClaimStatusRejected).Error
+}
