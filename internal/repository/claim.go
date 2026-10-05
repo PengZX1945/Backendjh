@@ -19,9 +19,11 @@ func FindClaimByID(id uint64) (*model.Claim, error) {
 	}
 	return &claim, err
 }
+
 func UpdateClaim(c *model.Claim) error {
 	return model.DB.Save(c).Error
 }
+
 func DeleteClaim(id uint64) error {
 	return model.DB.Where("id = ?", id).Delete(&model.Claim{}).Error
 }
