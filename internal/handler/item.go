@@ -190,3 +190,46 @@ func (ih *ItemHandler) MyItem(c *gin.Context) {
 	response.OK(c, gin.H{"items": items})
 	return
 }
+
+type updateRequest struct {
+	Type        string   `json:"type" binding:"required"`
+	ItemName    string   `json:"item_name" binding:"required"`
+	Category    string   `json:"category" binding:"required"`
+	Location    string   `json:"location"`
+	HappenTime  string   `json:"happen_time"`
+	Description string   `json:"description"`
+	Images      []string `json:"image"`
+	GetContact  string   `json:"get_contact"`
+	GetLocation string   `json:"get_location"`
+}
+
+func (ih *ItemHandler) Update(c *gin.Context) {
+	itemID, err := strconv.ParseUint(c.Param("item_id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	var req updateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	userID := c.GetUint64("userID")
+	e := ih.itemService.Update(userID, itemID, service.UpdateParams{
+		Typ:         req.Type,
+		ItemName:    req.ItemName,
+		Category:    req.Category,
+		Location:    req.Location,
+		HappenTime:  req.HappenTime,
+		Description: req.Description,
+		Images:      req.Images,
+		GetContact:  req.GetContact,
+		GetLocation: req.GetLocation,
+	})
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	response.OK(c, nil)
+	return
+}
