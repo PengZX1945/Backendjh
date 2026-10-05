@@ -156,3 +156,37 @@ func (ih *ItemHandler) List(c *gin.Context) {
 	response.OK(c, gin.H{"items": items})
 	return
 }
+
+func (ih *ItemHandler) MyItem(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if page < 1 {
+		page = 1
+	}
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+	if pageSize < 1 || pageSize > 50 {
+		pageSize = 10
+	}
+	typ := c.Query("type")
+	var itemStatus *int8
+	if s := c.Query("item_status"); s != "" {
+		v, err := strconv.Atoi(s)
+		if err != nil {
+			response.Fail(c, errcode.ParamError)
+			return
+		}
+		status := int8(v)
+		itemStatus = &status
+	}
+	userID := c.GetUint64("userID")
+	myList, e := ih.itemService.MyItem(userID, typ, itemStatus, page, pageSize)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	items := make([]gin.H, 0, len(myList))
+	for i := range myList {
+		items = append(items, itemResponse(&myList[i]))
+	}
+	response.OK(c, gin.H{"items": items})
+	return
+}
