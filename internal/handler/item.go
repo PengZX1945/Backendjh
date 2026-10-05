@@ -4,6 +4,7 @@ import (
 	"Backendjh/internal/pkg/errcode"
 	"Backendjh/internal/pkg/response"
 	"Backendjh/internal/service"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -50,4 +51,21 @@ func (ih *ItemHandler) Publish(c *gin.Context) {
 		return
 	}
 	response.OK(c, nil)
+}
+
+func (ih *ItemHandler) Close(c *gin.Context) {
+	itemID, err := strconv.ParseUint(c.Param("item_id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	userID := c.GetUint64("userID")
+	role := c.GetString("role")
+	e := ih.itemService.Close(userID, itemID, role)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	response.OK(c, nil)
+	return
 }
