@@ -25,12 +25,15 @@ func main() {
 	ups := service.NewUploadService()
 	uph := handler.NewUploadHandler(ups)
 
+	is := service.NewItemService()
+	ih := handler.NewItemHandler(is)
+
 	r := gin.Default()
 	r.Use(middleware.ErrorHandler())
 	r.Use(middleware.CORS())
 	r.Static("/uploads", "./uploads")
 
-	router.Setup(r, uh, uph, cfg.JWTSecret)
+	router.Setup(r, uh, uph, ih, cfg.JWTSecret)
 
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("server exited: %v", err)

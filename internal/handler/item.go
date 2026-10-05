@@ -75,7 +75,7 @@ func (ih *ItemHandler) Publish(c *gin.Context) {
 }
 
 func (ih *ItemHandler) Close(c *gin.Context) {
-	itemID, err := strconv.ParseUint(c.Param("item_id"), 10, 64)
+	itemID, err := strconv.ParseUint(c.Param("type"), 10, 64)
 	if err != nil {
 		response.Fail(c, errcode.ParamError)
 		return
