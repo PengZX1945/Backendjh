@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"Backendjh/internal/model"
 	"Backendjh/internal/pkg/errcode"
 	"Backendjh/internal/pkg/response"
 	"Backendjh/internal/service"
@@ -15,6 +16,26 @@ type ItemHandler struct {
 
 func NewItemHandler(s *service.ItemService) *ItemHandler {
 	return &ItemHandler{itemService: s}
+}
+
+func itemResponse(it *model.Item) gin.H {
+	return gin.H{
+		"item_id":        it.ID,
+		"type":           it.Type,
+		"item_name":      it.ItemName,
+		"category":       it.Category,
+		"location":       it.Location,
+		"happen_time":    it.HappenTime,
+		"description":    it.Description,
+		"image":          it.GetImages(),
+		"item_status":    it.Status,
+		"reject_reason":  it.RejectReason,
+		"poster_id":      it.PosterID,
+		"get_contact":    it.GetContact,
+		"get_location":   it.GetLocation,
+		"created_time":   it.CreatedAt,
+		"last_edit_time": it.UpdatedAt,
+	}
 }
 
 type publishRequest struct {
@@ -100,22 +121,38 @@ func (ih *ItemHandler) Detail(c *gin.Context) {
 		response.Fail(c, e)
 		return
 	}
-	response.OK(c, gin.H{
-		"item_id":        item.ID,
-		"type":           item.Type,
-		"item_name":      item.ItemName,
-		"category":       item.Category,
-		"location":       item.Location,
-		"happen_time":    item.HappenTime,
-		"description":    item.Description,
-		"image":          item.GetImages(),
-		"item_status":    item.Status,
-		"reject_reason":  item.RejectReason,
-		"poster_id":      item.PosterID,
-		"get_contact":    item.GetContact,
-		"get_location":   item.GetLocation,
-		"created_time":   item.CreatedAt,
-		"last_edit_time": item.UpdatedAt,
-	})
+	response.OK(c, itemResponse(item))
+	return
+}
+
+func (ih *ItemHandler) List(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if page < 1 {
+		page = 1
+	}
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+	if pageSize < 1 || pageSize > 50 {
+		pageSize = 10
+	}
+	var listParam = service.ListParams{
+		Typ:       c.Param("type"),     // 路径参数：/api/items/list/:type
+		Category:  c.Query("category"), // 没传就是空串 → 不过滤
+		Location:  c.Query("location"),
+		Keyword:   c.Query("keyword"),
+		StartTime: c.Query("start_time"),
+		EndTime:   c.Query("end_time"),
+		Page:      page, // 用你上面清洗过的变量
+		PageSize:  pageSize,
+	}
+	list, e := ih.itemService.ListItems(listParam)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	items := make([]gin.H, 0, len(list))
+	for i := range list {
+		items = append(items, itemResponse(&list[i]))
+	}
+	response.OK(c, gin.H{"items": items})
 	return
 }
