@@ -23,7 +23,7 @@ type publishRequest struct {
 	Location    string   `json:"location"`
 	HappenTime  string   `json:"happen_time"`
 	Description string   `json:"description"`
-	Images      []string `json:"images"`
+	Images      []string `json:"image"`
 	GetContact  string   `json:"get_contact"`
 	GetLocation string   `json:"get_location"`
 }
@@ -84,5 +84,38 @@ func (ih *ItemHandler) Delete(c *gin.Context) {
 		return
 	}
 	response.OK(c, nil)
+	return
+}
+
+func (ih *ItemHandler) Detail(c *gin.Context) {
+	itemID, err := strconv.ParseUint(c.Param("item_id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	userID := c.GetUint64("userID")
+	role := c.GetString("role")
+	item, e := ih.itemService.Detail(userID, role, itemID)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	response.OK(c, gin.H{
+		"item_id":        item.ID,
+		"type":           item.Type,
+		"item_name":      item.ItemName,
+		"category":       item.Category,
+		"location":       item.Location,
+		"happen_time":    item.HappenTime,
+		"description":    item.Description,
+		"image":          item.GetImages(),
+		"item_status":    item.Status,
+		"reject_reason":  item.RejectReason,
+		"poster_id":      item.PosterID,
+		"get_contact":    item.GetContact,
+		"get_location":   item.GetLocation,
+		"created_time":   item.CreatedAt,
+		"last_edit_time": item.UpdatedAt,
+	})
 	return
 }
