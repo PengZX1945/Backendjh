@@ -45,10 +45,10 @@ func ListItems(f ItemListFilter) ([]model.Item, error) {
 
 	q := model.DB.Model(&model.Item{})
 
-	if f.Type != "" {                        // ② type 有值才加
+	if f.Type != "" { // ② type 有值才加
 		q = q.Where("type = ?", f.Type)
 	}
-	if f.Status != nil {                     // ③ status 传了才加
+	if f.Status != nil { // ③ status 传了才加
 		q = q.Where("status = ?", *f.Status)
 	}
 	if f.PosterID != nil {

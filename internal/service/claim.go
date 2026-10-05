@@ -99,3 +99,24 @@ func (s *ClaimService) Review(role string, claimID uint64, option string) *errco
 	}
 	return nil
 }
+
+func (s *ClaimService) Delete(userID uint64, role string, claimID uint64) *errcode.Error {
+	if claimID == 0 {
+		return errcode.ParamError
+	}
+	claim, err := repository.FindClaimByID(claimID)
+	if err != nil {
+		return errcode.InternalError
+	}
+	if claim == nil {
+		return errcode.NotFound
+	}
+	if claim.ApplicantID != userID && role != model.RoleSysAdmin {
+		return errcode.Forbidden
+	}
+	err = repository.DeleteClaim(claim.ID)
+	if err != nil {
+		return errcode.InternalError
+	}
+	return nil
+}
