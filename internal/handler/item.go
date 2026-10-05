@@ -69,3 +69,20 @@ func (ih *ItemHandler) Close(c *gin.Context) {
 	response.OK(c, nil)
 	return
 }
+
+func (ih *ItemHandler) Delete(c *gin.Context) {
+	itemID, err := strconv.ParseUint(c.Param("item_id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	userID := c.GetUint64("userID")
+	role := c.GetString("role")
+	e := ih.itemService.Delete(userID, role, itemID)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	response.OK(c, nil)
+	return
+}
