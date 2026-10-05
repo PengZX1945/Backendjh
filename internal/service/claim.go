@@ -120,3 +120,15 @@ func (s *ClaimService) Delete(userID uint64, role string, claimID uint64) *errco
 	}
 	return nil
 }
+
+func (s *ClaimService) MyClaims(userID uint64, claimStatus *int8, page int, pageSize int) ([]model.Claim, *errcode.Error) {
+	if claimStatus != nil && (*claimStatus < 0 || *claimStatus > model.ClaimStatusRejected) {
+		return nil, errcode.ParamError
+	}
+	claimFilter := repository.ClaimListFilter{ApplicantID: &userID, ClaimStatus: claimStatus, Page: page, PageSize: pageSize}
+	claimList, err := repository.ListClaims(claimFilter)
+	if err != nil {
+		return nil, errcode.InternalError
+	}
+	return claimList, nil
+}
