@@ -206,3 +206,53 @@ func (s *ItemService) Update(userID uint64, itemID uint64, p UpdateParams) *errc
 	}
 	return nil
 }
+
+func (s *ItemService) PendingList(role, typ string, page, pageSize int) ([]model.Item, *errcode.Error) {
+	if role != model.RoleFinderAdmin && role != model.RoleSysAdmin {
+		return nil, errcode.Forbidden
+	}
+	if typ != model.ItemTypeLost && typ != model.ItemTypeFound {
+		return nil, errcode.ParamError
+	}
+	pending := model.ItemStatusPending
+	items, err := repository.ListItems(repository.ItemListFilter{
+		Type: typ, Status: &pending, Page: page, PageSize: pageSize,
+	})
+	if err != nil {
+		return nil, errcode.InternalError
+	}
+	return items, nil
+}
+
+func (s *ItemService) Review(role string, itemID uint64, option, rejectReason string) *errcode.Error {
+	if role != model.RoleFinderAdmin && role != model.RoleSysAdmin {
+		return errcode.Forbidden
+	}
+	if option != "approve" && option != "reject" {
+		return errcode.ParamError
+	}
+	if option == "reject" && rejectReason == "" {
+		return errcode.ParamError
+	}
+	item, err := repository.FindItemByID(itemID)
+	if err != nil {
+		return errcode.InternalError
+	}
+	if item == nil {
+		return errcode.NotFound
+	}
+	if item.Status != model.ItemStatusPending {
+		return errcode.StatusNotAllowed
+	}
+	if option == "approve" {
+		item.Status = model.ItemStatusPublished
+		item.RejectReason = ""
+	} else {
+		item.Status = model.ItemStatusRejected
+		item.RejectReason = rejectReason
+	}
+	if err := repository.UpdateItem(item); err != nil {
+		return errcode.InternalError
+	}
+	return nil
+}
