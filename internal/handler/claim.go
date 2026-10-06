@@ -180,3 +180,19 @@ func (ch *ClaimHandler) ListClaims(c *gin.Context) {
 	response.OK(c, gin.H{"claims": claims})
 	return
 }
+
+func (ch *ClaimHandler) Review(c *gin.Context) {
+	claimID, err := strconv.ParseUint(c.Param("claim_id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	option := c.Param("option") // 字符串直接用，合法性 service 判
+	role := c.GetString("role")
+	e := ch.claimService.Review(role, claimID, option)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	response.OK(c, nil)
+}
