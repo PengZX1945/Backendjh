@@ -40,3 +40,20 @@ func (ch *ClaimHandler) Submit(c *gin.Context) {
 	}
 	response.OK(c, nil)
 }
+
+func (ch *ClaimHandler) Delete(c *gin.Context) {
+	claimID, err := strconv.ParseUint(c.Param("claim_id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	userID := c.GetUint64("userID")
+	role := c.GetString("role")
+	e := ch.claimService.Delete(userID, role, claimID)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	response.OK(c, nil)
+	return
+}
