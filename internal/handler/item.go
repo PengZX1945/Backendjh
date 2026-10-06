@@ -256,3 +256,25 @@ func (ih *ItemHandler) PendingList(c *gin.Context) {
 	}
 	response.OK(c, gin.H{"items": list})
 }
+
+type reviewRequest struct {
+	RejectReason string `json:"reject_reason"`
+}
+
+func (ih *ItemHandler) Review(c *gin.Context) {
+	itemID, err := strconv.ParseUint(c.Param("item_id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	option := c.Param("option")
+	var req reviewRequest
+	_ = c.ShouldBindJSON(&req)
+	role := c.GetString("role")
+	e := ih.itemService.Review(role, itemID, option, req.RejectReason)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	response.OK(c, nil)
+}
