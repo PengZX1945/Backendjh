@@ -256,3 +256,35 @@ func (s *ItemService) Review(role string, itemID uint64, option, rejectReason st
 	}
 	return nil
 }
+
+func (s *ItemService) AdminClose(role string, itemID uint64) *errcode.Error {
+	if role != model.RoleFinderAdmin && role != model.RoleSysAdmin {
+		return errcode.Forbidden
+	}
+	item, err := repository.FindItemByID(itemID)
+	if err != nil {
+		return errcode.InternalError
+	}
+	if item == nil {
+		return errcode.NotFound
+	}
+	if item.Status != model.ItemStatusPublished {
+		return errcode.StatusNotAllowed
+	}
+	item.Status = model.ItemStatusClaimed
+	if err := repository.UpdateItem(item); err != nil {
+		return errcode.InternalError
+	}
+	return nil
+}
+
+func (s *ItemService) AdminItemList(role string, f repository.ItemListFilter) ([]model.Item, *errcode.Error) {
+	if role != model.RoleFinderAdmin && role != model.RoleSysAdmin {
+		return nil, errcode.Forbidden
+	}
+	items, err := repository.ListItems(f)
+	if err != nil {
+		return nil, errcode.InternalError
+	}
+	return items, nil
+}
