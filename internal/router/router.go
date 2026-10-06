@@ -42,6 +42,10 @@ func Setup(r *gin.Engine, uh *handler.UserHandler, uph *handler.UploadHandler, i
 	admin := r.Group("/api/admin", middleware.Auth(jwtSecret))
 	admin.GET("/claims", ch.ListClaims)
 	admin.POST("/claims/:claim_id/:option", ch.Review)
+	admin.GET("/items/pending/:type/", ih.PendingList)
+	admin.GET("/items/", ih.AdminItemList)
+	admin.POST("/items/:item_id/:option", ih.Review)
+	admin.PUT("/items/:item_id/", ih.AdminClose)
 
 	my := r.Group("/api/my", middleware.Auth(jwtSecret))
 	my.GET("/items", ih.MyItem)
