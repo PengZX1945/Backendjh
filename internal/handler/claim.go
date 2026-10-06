@@ -88,3 +88,29 @@ func (ch *ClaimHandler) Detail(c *gin.Context) {
 	response.OK(c, claimResponse(claim))
 	return
 }
+
+type updateClaimRequest struct {
+	Reason           string `json:"reason" binding:"required"`
+	ApplicantContact string `json:"applicant_contact" binding:"required"`
+}
+
+func (ch *ClaimHandler) Update(c *gin.Context) {
+	claimID, err := strconv.ParseUint(c.Param("claim_id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	var req updateClaimRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	userID := c.GetUint64("userID")
+	e := ch.claimService.Update(userID, claimID, req.Reason, req.ApplicantContact)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	response.OK(c, nil)
+	return
+}
