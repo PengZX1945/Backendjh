@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"Backendjh/internal/model"
 	"Backendjh/internal/pkg/errcode"
 	"Backendjh/internal/pkg/response"
 	"Backendjh/internal/service"
@@ -15,6 +16,19 @@ type ClaimHandler struct {
 
 func NewClaimHandler(s *service.ClaimService) *ClaimHandler {
 	return &ClaimHandler{claimService: s}
+}
+
+func claimResponse(cl *model.Claim) gin.H {
+	return gin.H{
+		"claim_id":          cl.ID,
+		"item_id":           cl.ItemID,
+		"reason":            cl.Reason,
+		"applicant_contact": cl.ApplicantContact,
+		"claim_status":      cl.ClaimStatus,
+		"applicant_id":      cl.ApplicantID,
+		"created_time":      cl.CreatedAt,
+		"last_edit_time":    cl.UpdatedAt,
+	}
 }
 
 type submitRequest struct {
@@ -55,5 +69,22 @@ func (ch *ClaimHandler) Delete(c *gin.Context) {
 		return
 	}
 	response.OK(c, nil)
+	return
+}
+
+func (ch *ClaimHandler) Detail(c *gin.Context) {
+	claimID, err := strconv.ParseUint(c.Param("claim_id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	userID := c.GetUint64("userID")
+	role := c.GetString("role")
+	claim, e := ch.claimService.Detail(userID, role, claimID)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	response.OK(c, claimResponse(claim))
 	return
 }
