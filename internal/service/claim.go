@@ -171,3 +171,23 @@ func (s *ClaimService) Update(userID uint64, claimID uint64, reason string, appl
 	}
 	return nil
 }
+
+func (s *ClaimService) ListClaims(page int, pageSize int, status *int8, role string) ([]model.Claim, *errcode.Error) {
+	if role != model.RoleFinderAdmin && role != model.RoleSysAdmin {
+		return nil, errcode.Forbidden
+	}
+	if status != nil && (*status < 0 || *status > model.ClaimStatusRejected) {
+		return nil, errcode.ParamError
+	}
+	claimFilter := repository.ClaimListFilter{
+		ApplicantID: nil,
+		ClaimStatus: status,
+		Page:        page,
+		PageSize:    pageSize,
+	}
+	claimList, err := repository.ListClaims(claimFilter)
+	if err != nil {
+		return nil, errcode.InternalError
+	}
+	return claimList, nil
+}
