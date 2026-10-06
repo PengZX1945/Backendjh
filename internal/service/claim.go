@@ -146,3 +146,28 @@ func (s *ClaimService) Detail(userID uint64, role string, claimID uint64) (*mode
 	}
 	return nil, errcode.NotFound
 }
+
+func (s *ClaimService) Update(userID uint64, claimID uint64, reason string, applicantContact string) *errcode.Error {
+	if reason == "" || applicantContact == "" {
+		return errcode.ParamError
+	}
+	claim, err := repository.FindClaimByID(claimID)
+	if err != nil {
+		return errcode.InternalError
+	}
+	if claim == nil {
+		return errcode.NotFound
+	}
+	if claim.ApplicantID != userID {
+		return errcode.Forbidden
+	}
+	if claim.ClaimStatus != model.ClaimStatusPending {
+		return errcode.StatusNotAllowed
+	}
+	claim.Reason = reason
+	claim.ApplicantContact = applicantContact
+	if err := repository.UpdateClaim(claim); err != nil {
+		return errcode.InternalError
+	}
+	return nil
+}
