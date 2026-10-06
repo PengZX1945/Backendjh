@@ -4,6 +4,7 @@ import (
 	"Backendjh/internal/model"
 	"Backendjh/internal/pkg/errcode"
 	"Backendjh/internal/pkg/response"
+	"Backendjh/internal/repository"
 	"Backendjh/internal/service"
 	"strconv"
 
@@ -277,4 +278,59 @@ func (ih *ItemHandler) Review(c *gin.Context) {
 		return
 	}
 	response.OK(c, nil)
+}
+
+func (ih *ItemHandler) AdminClose(c *gin.Context) {
+	itemID, err := strconv.ParseUint(c.Param("item_id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	role := c.GetString("role")
+	e := ih.itemService.AdminClose(role, itemID)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	response.OK(c, nil)
+}
+
+func (ih *ItemHandler) AdminItemList(c *gin.Context) {
+	// 分页兜底（老三样）
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if page < 1 {
+		page = 1
+	}
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+	if pageSize < 1 || pageSize > 50 {
+		pageSize = 10
+	}
+	var itemStatus *int8
+	if s := c.Query("status"); s != "" {
+		v, err := strconv.Atoi(s)
+		if err != nil {
+			response.Fail(c, errcode.ParamError)
+			return
+		}
+		status := int8(v)
+		itemStatus = &status
+	}
+	role := c.GetString("role")
+	items, e := ih.itemService.AdminItemList(role, repository.ItemListFilter{
+		Type:     c.Query("type"),     // 空串 = 不过滤，过滤器本来就支持
+		Category: c.Query("category"),
+		Keyword:  c.Query("keyword"),
+		Status:   itemStatus,
+		Page:     page,
+		PageSize: pageSize,
+	})
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	list := make([]gin.H, 0, len(items))
+	for i := range items {
+		list = append(list, itemResponse(&items[i]))
+	}
+	response.OK(c, gin.H{"items": list})
 }
