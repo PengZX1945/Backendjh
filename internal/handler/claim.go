@@ -147,3 +147,36 @@ func (ch *ClaimHandler) MyClaims(c *gin.Context) {
 	response.OK(c, gin.H{"claims": claims})
 	return
 }
+
+func (ch *ClaimHandler) ListClaims(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if page < 1 {
+		page = 1
+	}
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+	if pageSize < 1 || pageSize > 50 {
+		pageSize = 10
+	}
+	var claimStatus *int8
+	if s := c.Query("claim_status"); s != "" {
+		v, err := strconv.Atoi(s)
+		if err != nil {
+			response.Fail(c, errcode.ParamError)
+			return
+		}
+		status := int8(v)
+		claimStatus = &status
+	}
+	role := c.GetString("role")
+	myList, e := ch.claimService.ListClaims(page, pageSize, claimStatus, role)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	claims := make([]gin.H, 0, len(myList))
+	for i := range myList {
+		claims = append(claims, claimResponse(&myList[i]))
+	}
+	response.OK(c, gin.H{"claims": claims})
+	return
+}
