@@ -233,3 +233,26 @@ func (ih *ItemHandler) Update(c *gin.Context) {
 	response.OK(c, nil)
 	return
 }
+
+func (ih *ItemHandler) PendingList(c *gin.Context) {
+	typ := c.Param("type")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if page < 1 {
+		page = 1
+	}
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+	if pageSize < 1 || pageSize > 50 {
+		pageSize = 10
+	}
+	role := c.GetString("role")
+	items, e := ih.itemService.PendingList(role, typ, page, pageSize)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	list := make([]gin.H, 0, len(items))
+	for i := range items {
+		list = append(list, itemResponse(&items[i]))
+	}
+	response.OK(c, gin.H{"items": list})
+}
