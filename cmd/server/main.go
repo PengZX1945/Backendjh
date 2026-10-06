@@ -22,6 +22,9 @@ func main() {
 	us := service.NewUserService(cfg.JWTSecret)
 	uh := handler.NewUserHandler(us)
 
+	cs := service.NewClaimService()
+	ch := handler.NewClaimHandler(cs)
+
 	ups := service.NewUploadService()
 	uph := handler.NewUploadHandler(ups)
 
@@ -33,7 +36,7 @@ func main() {
 	r.Use(middleware.CORS())
 	r.Static("/uploads", "./uploads")
 
-	router.Setup(r, uh, uph, ih, cfg.JWTSecret)
+	router.Setup(r, uh, uph, ih, ch, cfg.JWTSecret)
 
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("server exited: %v", err)
