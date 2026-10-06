@@ -132,3 +132,17 @@ func (s *ClaimService) MyClaims(userID uint64, claimStatus *int8, page int, page
 	}
 	return claimList, nil
 }
+
+func (s *ClaimService) Detail(userID uint64, role string, claimID uint64) (*model.Claim, *errcode.Error) {
+	claim, err := repository.FindClaimByID(claimID)
+	if err != nil {
+		return nil, errcode.InternalError
+	}
+	if claim == nil {
+		return nil, errcode.NotFound
+	}
+	if userID != 0 && claim.ApplicantID == userID || role == model.RoleSysAdmin || role == model.RoleFinderAdmin {
+		return claim, nil
+	}
+	return nil, errcode.NotFound
+}
