@@ -58,7 +58,8 @@ func (ih *ItemHandler) Publish(c *gin.Context) {
 		return
 	}
 	userID := c.GetUint64("userID")
-	e := ih.itemService.Publish(userID, typ, service.PublishParams{
+	role := c.GetString("role")
+	newID, e := ih.itemService.Publish(userID, role, typ, service.PublishParams{
 		ItemName:    req.ItemName,
 		Category:    req.Category,
 		Location:    req.Location,
@@ -72,7 +73,7 @@ func (ih *ItemHandler) Publish(c *gin.Context) {
 		response.Fail(c, e)
 		return
 	}
-	response.OK(c, nil)
+	response.OK(c, gin.H{"id": newID})
 }
 
 func (ih *ItemHandler) Close(c *gin.Context) {
@@ -179,7 +180,7 @@ func (ih *ItemHandler) MyItem(c *gin.Context) {
 		itemStatus = &status
 	}
 	userID := c.GetUint64("userID")
-	myList, e := ih.itemService.MyItem(userID, typ, itemStatus, page, pageSize)
+	myList, e := ih.itemService.MyItem(userID, typ, itemStatus, page, pageSize, c.Query("start_time"), c.Query("end_time"))
 	if e != nil {
 		response.Fail(c, e)
 		return
@@ -246,7 +247,7 @@ func (ih *ItemHandler) PendingList(c *gin.Context) {
 		pageSize = 10
 	}
 	role := c.GetString("role")
-	items, e := ih.itemService.PendingList(role, typ, page, pageSize)
+	items, e := ih.itemService.PendingList(role, typ, page, pageSize, c.Query("start_time"), c.Query("end_time"))
 	if e != nil {
 		response.Fail(c, e)
 		return
@@ -317,12 +318,14 @@ func (ih *ItemHandler) AdminItemList(c *gin.Context) {
 	}
 	role := c.GetString("role")
 	items, e := ih.itemService.AdminItemList(role, repository.ItemListFilter{
-		Type:     c.Query("type"),     // 空串 = 不过滤，过滤器本来就支持
-		Category: c.Query("category"),
-		Keyword:  c.Query("keyword"),
-		Status:   itemStatus,
-		Page:     page,
-		PageSize: pageSize,
+		Type:      c.Query("type"),     // 空串 = 不过滤，过滤器本来就支持
+		Category:  c.Query("category"),
+		Keyword:   c.Query("keyword"),
+		Status:    itemStatus,
+		StartTime: c.Query("start_time"),
+		EndTime:   c.Query("end_time"),
+		Page:      page,
+		PageSize:  pageSize,
 	})
 	if e != nil {
 		response.Fail(c, e)

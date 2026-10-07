@@ -21,6 +21,7 @@ func main() {
 
 	us := service.NewUserService(cfg.JWTSecret)
 	uh := handler.NewUserHandler(us)
+	us.SeedSysAdmin(cfg.AdminUsername, cfg.AdminPassword)
 
 	cs := service.NewClaimService()
 	ch := handler.NewClaimHandler(cs)
@@ -31,12 +32,18 @@ func main() {
 	is := service.NewItemService()
 	ih := handler.NewItemHandler(is)
 
+	as := service.NewAnnouncementService()
+	ah := handler.NewAnnouncementHandler(as)
+
+	sts := service.NewStatsService()
+	sh := handler.NewStatsHandler(sts)
+
 	r := gin.Default()
 	r.Use(middleware.ErrorHandler())
 	r.Use(middleware.CORS())
 	r.Static("/uploads", "./uploads")
 
-	router.Setup(r, uh, uph, ih, ch, cfg.JWTSecret)
+	router.Setup(r, uh, uph, ih, ch, ah, sh, cfg.JWTSecret)
 
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("server exited: %v", err)

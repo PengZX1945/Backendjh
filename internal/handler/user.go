@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"Backendjh/internal/model"
 	"Backendjh/internal/pkg/errcode"
 	"Backendjh/internal/pkg/response"
 	"Backendjh/internal/service"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +16,17 @@ type UserHandler struct {
 
 func NewUserHandler(u *service.UserService) *UserHandler {
 	return &UserHandler{userService: u}
+}
+
+func userResponse(u *model.User) gin.H {
+	return gin.H{
+		"user_id":  u.ID,
+		"username": u.Username,
+		"nickname": u.Nickname,
+		"role":     u.Role,
+		"contact":  u.Contact,
+		"status":   u.Status,
+	}
 }
 
 type loginRequest struct {
@@ -111,6 +124,82 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	_, err := h.userService.UpdateProfile(userID, req.Nickname, req.Contact)
 	if err != nil {
 		response.Fail(c, err)
+		return
+	}
+	response.OK(c, nil)
+}
+
+func (h *UserHandler) AdminUserList(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if page < 1 {
+		page = 1
+	}
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+	if pageSize < 1 || pageSize > 50 {
+		pageSize = 10
+	}
+	users, e := h.userService.AdminUserList(
+		c.GetString("role"),
+		c.Query("keyword"),
+		c.Query("role"),
+		page, pageSize,
+	)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	list := make([]gin.H, 0, len(users))
+	for i := range users {
+		list = append(list, userResponse(&users[i]))
+	}
+	response.OK(c, gin.H{"users": list})
+}
+
+type updateRoleRequest struct {
+	Role string `json:"role" binding:"required"`
+}
+
+func (h *UserHandler) UpdateRole(c *gin.Context) {
+	targetID, err := strconv.ParseUint(c.Param("user_id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	var req updateRoleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	userID := c.GetUint64("userID")
+	role := c.GetString("role")
+	e := h.userService.UpdateRole(userID, role, targetID, req.Role)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	response.OK(c, nil)
+}
+
+type updateStatusRequest struct {
+	Status int8 `json:"status"`
+}
+
+func (h *UserHandler) UpdateStatus(c *gin.Context) {
+	targetID, err := strconv.ParseUint(c.Param("user_id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	var req updateStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	userID := c.GetUint64("userID")
+	role := c.GetString("role")
+	e := h.userService.UpdateStatus(userID, role, targetID, req.Status)
+	if e != nil {
+		response.Fail(c, e)
 		return
 	}
 	response.OK(c, nil)

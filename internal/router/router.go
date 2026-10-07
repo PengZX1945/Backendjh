@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Setup(r *gin.Engine, uh *handler.UserHandler, uph *handler.UploadHandler, ih *handler.ItemHandler, ch *handler.ClaimHandler, jwtSecret string) {
+func Setup(r *gin.Engine, uh *handler.UserHandler, uph *handler.UploadHandler, ih *handler.ItemHandler, ch *handler.ClaimHandler, ah *handler.AnnouncementHandler, sh *handler.StatsHandler, jwtSecret string) {
 	userpub := r.Group("/api/auth")
 	userpub.POST("/register", uh.Register)
 	userpub.POST("/login", uh.Login)
@@ -17,6 +17,10 @@ func Setup(r *gin.Engine, uh *handler.UserHandler, uph *handler.UploadHandler, i
 	userpri.GET("/profile", uh.GetProfile)
 	userpri.PUT("/profile", uh.UpdateProfile)
 	userpri.PUT("/password", uh.ChangePassword)
+
+	// 公告：公开可读
+	anpub := r.Group("/api/announcements")
+	anpub.GET("/", ah.List)
 
 	upload := r.Group("/api/upload", middleware.Auth(jwtSecret))
 	upload.POST("/", uph.UploadFile)
@@ -46,6 +50,14 @@ func Setup(r *gin.Engine, uh *handler.UserHandler, uph *handler.UploadHandler, i
 	admin.GET("/items/", ih.AdminItemList)
 	admin.POST("/items/:item_id/:option", ih.Review)
 	admin.PUT("/items/:item_id/", ih.AdminClose)
+	admin.GET("/users", uh.AdminUserList)
+	admin.PUT("/users/:user_id/role", uh.UpdateRole)
+	admin.PUT("/users/:user_id/status", uh.UpdateStatus)
+	admin.POST("/announcements/", ah.Create)
+	admin.PUT("/announcements/:announcement_id/", ah.Update)
+	admin.DELETE("/announcements/:announcement_id/", ah.Delete)
+	admin.GET("/stats/overview", sh.Overview)
+	admin.GET("/stats/trend", sh.Trend)
 
 	my := r.Group("/api/my", middleware.Auth(jwtSecret))
 	my.GET("/items", ih.MyItem)

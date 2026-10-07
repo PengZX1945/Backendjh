@@ -30,3 +30,6 @@ go.work.sum
 # Editor/IDE
 .idea/
 # .vscode/
+
+# 运行时上传文件
+uploads/

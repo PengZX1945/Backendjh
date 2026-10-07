@@ -23,18 +23,23 @@ type PublishParams struct {
 	GetLocation string
 }
 
-func (s *ItemService) Publish(userID uint64, typ string, p PublishParams) *errcode.Error {
+func (s *ItemService) Publish(userID uint64, role, typ string, p PublishParams) (uint64, *errcode.Error) {
 	if typ != model.ItemTypeLost && typ != model.ItemTypeFound {
-		return errcode.ParamError
+		return 0, errcode.ParamError
 	}
 	if p.ItemName == "" || p.Category == "" {
-		return errcode.ParamError
+		return 0, errcode.ParamError
 	}
 	if typ == model.ItemTypeFound && p.GetContact == "" && p.GetLocation == "" {
-		return errcode.ParamError
+		return 0, errcode.ParamError
 	}
 	if len(p.Images) > 5 {
-		return errcode.ParamError
+		return 0, errcode.ParamError
+	}
+	// 管理员及以上（finder_admin/sys_admin）发布免审核，直接已发布；普通用户走待审核
+	initialStatus := model.ItemStatusPending
+	if role != model.RoleUser {
+		initialStatus = model.ItemStatusPublished
 	}
 	item := &model.Item{
 		Type:        typ,
@@ -43,26 +48,26 @@ func (s *ItemService) Publish(userID uint64, typ string, p PublishParams) *errco
 		Location:    p.Location,
 		HappenTime:  p.HappenTime,
 		Description: p.Description,
-		Status:      model.ItemStatusPending,
+		Status:      initialStatus,
 		PosterID:    userID,
 		GetContact:  p.GetContact,
 		GetLocation: p.GetLocation,
 	}
 	item.SetImages(p.Images)
 	if err := repository.CreateItem(item); err != nil {
-		return errcode.InternalError
+		return 0, errcode.InternalError
 	}
-	return nil
+	return item.ID, nil
 }
 
-func (s *ItemService) MyItem(userID uint64, typ string, itemStatus *int8, page int, pageSize int) ([]model.Item, *errcode.Error) {
+func (s *ItemService) MyItem(userID uint64, typ string, itemStatus *int8, page int, pageSize int, startTime string, endTime string) ([]model.Item, *errcode.Error) {
 	if typ != "" && typ != model.ItemTypeLost && typ != model.ItemTypeFound {
 		return nil, errcode.ParamError
 	}
 	if itemStatus != nil && (*itemStatus < 0 || *itemStatus > model.ItemStatusClaimed) {
 		return nil, errcode.ParamError
 	}
-	itemFilter := repository.ItemListFilter{Type: typ, PosterID: &userID, Status: itemStatus, Page: page, PageSize: pageSize}
+	itemFilter := repository.ItemListFilter{Type: typ, PosterID: &userID, Status: itemStatus, Page: page, PageSize: pageSize, StartTime: startTime, EndTime: endTime}
 	itemList, err := repository.ListItems(itemFilter)
 	if err != nil {
 		return nil, errcode.InternalError
@@ -207,7 +212,7 @@ func (s *ItemService) Update(userID uint64, itemID uint64, p UpdateParams) *errc
 	return nil
 }
 
-func (s *ItemService) PendingList(role, typ string, page, pageSize int) ([]model.Item, *errcode.Error) {
+func (s *ItemService) PendingList(role, typ string, page, pageSize int, startTime string, endTime string) ([]model.Item, *errcode.Error) {
 	if role != model.RoleFinderAdmin && role != model.RoleSysAdmin {
 		return nil, errcode.Forbidden
 	}
@@ -216,7 +221,7 @@ func (s *ItemService) PendingList(role, typ string, page, pageSize int) ([]model
 	}
 	pending := model.ItemStatusPending
 	items, err := repository.ListItems(repository.ItemListFilter{
-		Type: typ, Status: &pending, Page: page, PageSize: pageSize,
+		Type: typ, Status: &pending, Page: page, PageSize: pageSize, StartTime: startTime, EndTime: endTime,
 	})
 	if err != nil {
 		return nil, errcode.InternalError
