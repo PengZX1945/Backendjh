@@ -5,6 +5,7 @@ import (
 	"Backendjh/internal/pkg/errcode"
 	"Backendjh/internal/pkg/jwt"
 	"Backendjh/internal/repository"
+	"log"
 	"regexp"
 
 	"golang.org/x/crypto/bcrypt"
@@ -162,4 +163,29 @@ func (s *UserService) UpdateRole(operatorID uint64, operatorRole string, targetI
 		return errcode.InternalError
 	}
 	return nil
+}
+
+func (s *UserService) SeedSysAdmin(username, password string) {
+	if password == "" {
+		return
+	}
+	var n int64
+	if err := model.DB.Model(&model.User{}).
+		Where("role = ?", model.RoleSysAdmin).Count(&n).Error; err != nil || n > 0 {
+		return
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return
+	}
+	u := &model.User{
+		Username:     username,
+		PasswordHash: string(hash),
+		Nickname:     "系统管理员",
+		Role:         model.RoleSysAdmin,
+		Status:       1,
+	}
+	if err := repository.CreateUser(u); err == nil {
+		log.Printf("seeded sys_admin: %s", username)
+	}
 }

@@ -21,6 +21,7 @@ func main() {
 
 	us := service.NewUserService(cfg.JWTSecret)
 	uh := handler.NewUserHandler(us)
+	us.SeedSysAdmin(cfg.AdminUsername, cfg.AdminPassword)
 
 	cs := service.NewClaimService()
 	ch := handler.NewClaimHandler(cs)
