@@ -136,13 +136,13 @@ func (ih *ItemHandler) List(c *gin.Context) {
 		pageSize = 10
 	}
 	var listParam = service.ListParams{
-		Typ:       c.Param("type"),     // 路径参数：/api/items/list/:type
-		Category:  c.Query("category"), // 没传就是空串 → 不过滤
+		Typ:       c.Param("type"),
+		Category:  c.Query("category"),
 		Location:  c.Query("location"),
 		Keyword:   c.Query("keyword"),
 		StartTime: c.Query("start_time"),
 		EndTime:   c.Query("end_time"),
-		Page:      page, // 用你上面清洗过的变量
+		Page:      page,
 		PageSize:  pageSize,
 	}
 	list, e := ih.itemService.ListItems(listParam)
@@ -296,7 +296,6 @@ func (ih *ItemHandler) AdminClose(c *gin.Context) {
 }
 
 func (ih *ItemHandler) AdminItemList(c *gin.Context) {
-	// 分页兜底（老三样）
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	if page < 1 {
 		page = 1
@@ -317,7 +316,7 @@ func (ih *ItemHandler) AdminItemList(c *gin.Context) {
 	}
 	role := c.GetString("role")
 	items, e := ih.itemService.AdminItemList(role, repository.ItemListFilter{
-		Type:     c.Query("type"),     // 空串 = 不过滤，过滤器本来就支持
+		Type:     c.Query("type"),
 		Category: c.Query("category"),
 		Keyword:  c.Query("keyword"),
 		Status:   itemStatus,
