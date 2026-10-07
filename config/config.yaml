@@ -1,0 +1,38 @@
+# 精弘校园失物招领系统 · 后端配置
+# 所有项均可用环境变量覆盖（见 internal/config/config.go 的 applyEnv），
+# 部署时改端口或密钥不必修改本文件。
+
+server:
+  # 与前端 vite 代理默认目标 http://localhost:8080 对齐
+  port: 8080
+  # debug / release
+  mode: release
+
+database:
+  # sqlite（默认，免安装） / mysql
+  driver: sqlite
+  # sqlite 为文件路径；mysql 形如 user:pass@tcp(127.0.0.1:3306)/lostfound?charset=utf8mb4&parseTime=True&loc=Local
+  dsn: data/lostfound.db
+  # 启动时写入演示数据（幂等：已有用户则跳过）
+  seed: true
+
+auth:
+  # 生产环境务必用 JWT_SECRET 环境变量覆盖
+  jwt_secret: lostfound-campus-secret-change-me
+  jwt_expire_hours: 72
+  issuer: lostfound
+
+upload:
+  dir: data/uploads
+  # 挂在 /api 之下，前端开发态经 vite 代理即可访问，生产态由 Nginx 反代 /api
+  url_prefix: /api/uploads
+  max_size_mb: 5
+  allowed_exts:
+    - jpg
+    - jpeg
+    - png
+    - webp
+
+logger:
+  # debug / info / warn / error
+  level: info
