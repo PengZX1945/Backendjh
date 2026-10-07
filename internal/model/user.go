@@ -8,6 +8,12 @@ const (
 	RoleSysAdmin    = "sys_admin"
 )
 
+// 用户状态
+const (
+	UserStatusDisabled = 0 // 禁用
+	UserStatusEnabled  = 1 // 启用
+)
+
 type User struct {
 	ID           uint64    `gorm:"primaryKey" json:"id"`
 	Username     string    `gorm:"size:32;uniqueIndex;not null" json:"username"`

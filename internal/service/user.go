@@ -165,6 +165,33 @@ func (s *UserService) UpdateRole(operatorID uint64, operatorRole string, targetI
 	return nil
 }
 
+func (s *UserService) UpdateStatus(operatorID uint64, operatorRole string, targetID uint64, status int8) *errcode.Error {
+	if operatorRole != model.RoleSysAdmin {
+		return errcode.Forbidden
+	}
+	if status != model.UserStatusDisabled && status != model.UserStatusEnabled {
+		return errcode.ParamError
+	}
+	if targetID == operatorID {
+		return errcode.StatusNotAllowed
+	}
+	target, err := repository.FindUserByID(targetID)
+	if err != nil {
+		return errcode.InternalError
+	}
+	if target == nil {
+		return errcode.NotFound
+	}
+	if target.Role == model.RoleSysAdmin {
+		return errcode.Forbidden
+	}
+	target.Status = status
+	if err := repository.UpdateUser(target); err != nil {
+		return errcode.InternalError
+	}
+	return nil
+}
+
 func (s *UserService) SeedSysAdmin(username, password string) {
 	if password == "" {
 		return
@@ -188,31 +215,4 @@ func (s *UserService) SeedSysAdmin(username, password string) {
 	if err := repository.CreateUser(u); err == nil {
 		log.Printf("seeded sys_admin: %s", username)
 	}
-}
-
-func (s *UserService) UpdateUserStatus(operatorID uint64, operatorRole string, targetID uint64, newStatus int8) *errcode.Error {
-	if operatorRole != model.RoleSysAdmin {
-		return errcode.Forbidden
-	}
-	if newStatus != 0 && newStatus != 1 {
-		return errcode.ParamError
-	}
-	if targetID == operatorID {
-		return errcode.StatusNotAllowed
-	}
-	target, err := repository.FindUserByID(targetID)
-	if err != nil {
-		return errcode.InternalError
-	}
-	if target == nil {
-		return errcode.NotFound
-	}
-	if target.Role == model.RoleSysAdmin {
-		return errcode.Forbidden
-	}
-	target.Status = newStatus
-	if err := repository.UpdateUser(target); err != nil {
-		return errcode.InternalError
-	}
-	return nil
 }
