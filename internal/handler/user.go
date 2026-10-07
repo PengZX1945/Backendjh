@@ -178,3 +178,28 @@ func (h *UserHandler) UpdateRole(c *gin.Context) {
 	}
 	response.OK(c, nil)
 }
+
+type updateStatusRequest struct {
+	Status int8 `json:"status"`
+}
+
+func (h *UserHandler) UpdateUserStatus(c *gin.Context) {
+	targetID, err := strconv.ParseUint(c.Param("user_id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	var req updateStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, errcode.ParamError)
+		return
+	}
+	userID := c.GetUint64("userID")
+	role := c.GetString("role")
+	e := h.userService.UpdateUserStatus(userID, role, targetID, req.Status)
+	if e != nil {
+		response.Fail(c, e)
+		return
+	}
+	response.OK(c, nil)
+}

@@ -48,6 +48,7 @@ func Setup(r *gin.Engine, uh *handler.UserHandler, uph *handler.UploadHandler, i
 	admin.PUT("/items/:item_id/", ih.AdminClose)
 	admin.GET("/users", uh.AdminUserList)
 	admin.PUT("/users/:user_id/role", uh.UpdateRole)
+	admin.PUT("/users/:user_id/status", uh.UpdateUserStatus)
 
 	my := r.Group("/api/my", middleware.Auth(jwtSecret))
 	my.GET("/items", ih.MyItem)
