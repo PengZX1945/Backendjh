@@ -46,6 +46,8 @@ func Setup(r *gin.Engine, uh *handler.UserHandler, uph *handler.UploadHandler, i
 	admin.GET("/items/", ih.AdminItemList)
 	admin.POST("/items/:item_id/:option", ih.Review)
 	admin.PUT("/items/:item_id/", ih.AdminClose)
+	admin.GET("/users", uh.AdminUserList)
+	admin.PUT("/users/:user_id/role", uh.UpdateRole)
 
 	my := r.Group("/api/my", middleware.Auth(jwtSecret))
 	my.GET("/items", ih.MyItem)
